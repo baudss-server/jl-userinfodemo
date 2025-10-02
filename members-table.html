@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Modern Cipher - Members Table</title>
+
+    <!-- Shared styles -->
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <!-- Table-only styles -->
+    <link rel="stylesheet" href="assets/css/table.css" />
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+  </head>
+  <body class="density-comfortable">
+    <a href="#membersTableRegion" class="skip-link">Skip to members table</a>
+
+    <!-- Mobile overlay for off-canvas menu -->
+    <div class="mc-overlay" aria-hidden="true"></div>
+
+    <!-- Mobile topbar -->
+    <div class="mc-topbar" role="banner">
+      <button class="mc-burger" id="mcBurger" aria-label="Open menu">
+        <i class="fas fa-bars" aria-hidden="true"></i>
+      </button>
+      <div class="brand">MODERN CIPHER</div>
+    </div>
+
+    <div class="main-wrapper">
+      <aside class="sidebar" aria-label="Primary">
+        <div>
+          <div class="logo-section">MODERN CIPHER</div>
+          <nav class="nav-links">
+            <a href="index.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="member.html"><i class="fas fa-id-card"></i> Members</a>
+            <a href="members-table.html" class="active" aria-current="page"><i class="fas fa-table"></i> Members Table</a>
+          </nav>
+        </div>
+        <div class="sidebar-footer">
+          <a href="#"><i class="fas fa-shield-alt"></i> Go to Verify</a>
+        </div>
+      </aside>
+
+      <main class="dashboard-content">
+        <header class="dashboard-header">
+          <h1>MEMBERS TABLE</h1>
+        </header>
+
+        <section class="card" aria-labelledby="membersHeading">
+          <h2 id="membersHeading" class="sr-only">Members list with search, sort, and pagination</h2>
+
+          <!-- toolbar (buttons removed; search only) -->
+          <div class="table-toolbar" role="toolbar" aria-label="Members table toolbar">
+            <div class="left"><!-- intentionally empty --></div>
+            <div class="right toolbar-right-inline">
+              <label for="tblSearch" class="sr-only">Search members</label>
+              <input id="tblSearch"
+                     type="text"
+                     placeholder="Search name / ID / status…"
+                     autocomplete="off"
+                     inputmode="search"
+                     spellcheck="false"
+                     aria-controls="membersTable"
+                     aria-label="Search members by name, ID, status"/>
+            </div>
+          </div>
+
+          <!-- table -->
+          <div id="membersTableRegion" class="table-wrap" role="region" aria-label="Members results" tabindex="0">
+            <table id="membersTable" class="mc-table" aria-describedby="tableDesc">
+              <caption id="tableDesc" class="sr-only">
+                Sortable table of members with columns for name, ID, status, and expiration.
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col" data-key="name" aria-sort="none">Name</th>
+                  <th scope="col" data-key="surname" aria-sort="none">Surname</th>
+                  <th scope="col" data-key="nationality" aria-sort="none">Nationality</th>
+                  <th scope="col" data-key="idType" aria-sort="none">ID Type</th>
+                  <th scope="col" data-key="idValue" aria-sort="none">ID Value</th>
+                  <th scope="col" data-key="age" aria-sort="none">Age Group</th>
+                  <th scope="col" data-key="represents" aria-sort="none">Represents</th>
+                  <th scope="col" data-key="division" aria-sort="none">Division</th>
+                  <th scope="col" data-key="status" aria-sort="none">Status</th>
+                  <th scope="col" data-key="expires" aria-sort="none" data-type="date">Expires</th>
+                  <th class="actions-col" scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="mc-empty-row" hidden>
+                  <td class="mc-empty" colspan="11">No members found. Try adjusting your search.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-footer" aria-live="polite">
+            <div class="rows-info" id="rowsInfo">0 records</div>
+            <div class="pager" id="pager" role="navigation" aria-label="Table pagination">
+              <button class="btn btn-ghost" data-page="prev" type="button" aria-label="Previous page" disabled>
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <span id="pageLabel" aria-live="polite">1 / 1</span>
+              <button class="btn btn-ghost" data-page="next" type="button" aria-label="Next page" disabled>
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+              </button>
+
+              <div class="rows-per-page">
+                <label for="rowsPerPage">Rows:</label>
+                <select id="rowsPerPage" aria-label="Rows per page">
+                  <option>10</option>
+                  <option selected>25</option>
+                  <option>50</option>
+                  <option>100</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="main-footer">
+      <p>&copy; 2025 Modern Cipher. All Rights Reserved. |
+        <span class="footer-highlight">Member Data Management</span></p>
+    </footer>
+
+    <script src="assets/js/app.js" defer></script>
+    <script src="assets/js/table.js" defer></script>
+
+    <noscript>
+      <div class="card" style="margin:1rem">JavaScript is required to view and manage the members table.</div>
+    </noscript>
+  </body>
+</html>

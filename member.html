@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Modern Cipher - Member Profile</title>
+
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="main-wrapper">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div>
+          <div class="logo-section">MODERN CIPHER</div>
+          <nav class="nav-links">
+            <a href="index.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="member.html" class="active"><i class="fas fa-users"></i> Members</a>
+            <a href="members-table.html"><i class="fas fa-table"></i> Table</a>
+          </nav>
+        </div>
+        <div class="sidebar-footer">
+          <a href="#"><i class="fas fa-shield-alt"></i> Go to Verify</a>
+        </div>
+      </aside>
+
+      <!-- Content -->
+      <main class="dashboard-content">
+        <header class="dashboard-header">
+          <h1>MEMBER PROFILE MANAGER</h1>
+        </header>
+
+        <div class="tab-and-search-wrapper">
+          <div class="tab-navigation">
+            <button class="btn tab-active" type="button">
+              <i class="fas fa-file-alt"></i> GENERAL INFORMATION
+            </button>
+          </div>
+
+          <div class="member-selection-area top-search">
+            <div class="selection-group name">
+              <div class="search-input-with-dropdown">
+                <input
+                  type="text"
+                  placeholder="Search Member Name"
+                  id="search-name-input"
+                  aria-label="Search member name"
+                />
+                <button
+                  class="dropdown-btn"
+                  id="search-name-btn"
+                  type="button"
+                  aria-label="Open name search options"
+                >
+                  <i class="fas fa-caret-down" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="selection-group id">
+              <div class="search-input-with-dropdown">
+                <input
+                  type="text"
+                  placeholder="Search Member ID"
+                  id="search-id-input"
+                  aria-label="Search member ID"
+                />
+                <button
+                  class="dropdown-btn"
+                  id="search-id-btn"
+                  type="button"
+                  aria-label="Open ID search options"
+                >
+                  <i class="fas fa-caret-down" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-container">
+          <!-- General info form -->
+          <section class="card general-info-card">
+            <div class="form-grid">
+              <div class="input-group">
+                <label for="member-name">Name</label>
+                <input type="text" id="member-name" value="Sean" />
+              </div>
+              <div class="input-group">
+                <label for="surname">Surname</label>
+                <input type="text" id="surname" value="Aranar" />
+              </div>
+              <div class="input-group">
+                <label for="id-type">Primary ID shown on card</label>
+                <select id="id-type" aria-label="Select ID type">
+                  <option value="MIN" selected>MIN</option>
+                  <option value="CIN">CIN</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label for="id-type-value" id="id-type-value-label">Enter MIN/CIN</label>
+                <input type="text" id="id-type-value" placeholder="Type MIN or CIN here" />
+              </div>
+
+              <div class="input-group">
+                <label for="nationality">Nationality</label>
+                <input type="text" id="nationality" value="Philippines" />
+              </div>
+              <!-- hidden (for persistence only) -->
+              <input type="hidden" id="member-id" value="10091810" />
+              <input type="hidden" id="cin" value="" />
+
+              <div class="input-group">
+                <label for="age-group">Current age group</label>
+                <input type="text" id="age-group" value="Adult" />
+              </div>
+              <div class="input-group">
+                <label for="represents">Represents</label>
+                <input type="text" id="represents" value="Philippines" />
+              </div>
+
+              <!-- Licenses (shown sa likod ng ID) -->
+              <div class="input-group">
+                <label for="license-division">Licenses: Division</label>
+                <input type="text" id="license-division" value="General" />
+              </div>
+              <div class="input-group">
+                <label for="license-status">Licenses: Status</label>
+                <input type="text" id="license-status" value="Active" />
+              </div>
+              <div class="input-group">
+                <label for="expires-on">Expires on</label>
+                <input type="text" id="expires-on" value="12/04/2026" />
+              </div>
+            </div>
+
+            <!-- ACTIONS (kanan) -->
+            <div class="form-actions" style="margin-top:25px; display:flex; gap:10px; justify-content:flex-end;">
+              <button class="btn btn-save" id="save-profile" type="button">
+                <i class="fas fa-save"></i> Save Profile Changes
+              </button>
+              <button class="btn btn-success" id="btnAddMember" type="button" title="Add as new member to the table">
+                <i class="fas fa-user-plus"></i> Add Member
+              </button>
+            </div>
+          </section>
+
+          <!-- ID Card (click to flip) -->
+          <aside class="card id-panel">
+            <div
+              class="flip-card"
+              id="idFlipCard"
+              role="button"
+              tabindex="0"
+              aria-pressed="false"
+              aria-live="polite"
+            >
+              <div class="flip-inner">
+                <!-- FRONT -->
+                <div class="id-card landscape face front" aria-label="ID Front">
+                  <div class="id-topband">
+                    <span class="org">MODERN CIPHER</span>
+                    <span class="class-pill" id="id-class-pill">ACTIVE</span>
+                  </div>
+
+                  <div class="id-body front-simple">
+                    <div class="photo-box">
+                      <img
+                        src="https://via.placeholder.com/220x260/EEEEEE/333333?text=PHOTO"
+                        alt="Member Photo"
+                        class="member-photo-id"
+                        id="id-photo-front"
+                      />
+                    </div>
+
+                    <dl class="info-list">
+                      <div class="row">
+                        <dt>Name</dt>
+                        <dd id="fs-name">—</dd>
+                      </div>
+                      <div class="row">
+                        <dt>Surname</dt>
+                        <dd id="fs-surname">—</dd>
+                      </div>
+                      <div class="row">
+                        <dt>Nationality</dt>
+                        <dd id="fs-nationality">—</dd>
+                      </div>
+                      <div class="row">
+                        <dt id="fs-min-label">Member Id number (MIN)</dt>
+                        <dd id="fs-min">—</dd>
+                      </div>
+                      <div class="row">
+                        <dt>Current age group</dt>
+                        <dd id="fs-age">—</dd>
+                      </div>
+                      <div class="row">
+                        <dt>Represents</dt>
+                        <dd id="fs-represents">—</dd>
+                      </div>
+                    </dl>
+
+                    <div class="qr-box small">
+                      <canvas id="qr-front" width="84" height="84" aria-label="QR code"></canvas>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- BACK -->
+                <div class="id-card landscape face back" aria-label="ID Back">
+                  <div class="id-topband soft">
+                    <span class="org">SCAN FOR VERIFICATION</span>
+                  </div>
+
+                  <div class="id-body back-qr-split">
+                    <div class="qr-left">
+                      <canvas id="qr-back" width="220" height="220" aria-label="QR code"></canvas>
+                    </div>
+
+                    <dl class="info-list qr-right back-info">
+                      <div class="row">
+                        <dt>ID Type</dt>
+                        <dd id="b-idtype">—</dd>
+                      </div>
+                      <div class="row">
+                        <dt>Division</dt>
+                        <dd id="b-division">—</dd>
+                      </div>
+                      <div class="row">
+                        <dt>Status</dt>
+                        <dd id="b-status">—</dd>
+                      </div>
+                      <div class="row">
+                        <dt>Expires</dt>
+                        <dd id="b-expires">—</dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  <div class="id-footband">
+                    <span class="foot-label">ID</span>
+                    <span class="foot-value" id="b-idval">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="action-buttons-id">
+              <div class="btn-row">
+                <button class="btn btn-fancy" id="btnUpload" type="button">
+                  <i class="fas fa-upload"></i> Upload Picture
+                </button>
+                <button class="btn btn-fancy" id="btnPrint" type="button">
+                  <i class="fas fa-print"></i> Print ID
+                </button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </main>
+    </div>
+
+    <footer class="main-footer">
+      <p>
+        &copy; 2025 Modern Cipher. All Rights Reserved. |
+        <span class="footer-highlight">Member Data Management</span>
+      </p>
+    </footer>
+
+    <script src="assets/js/app.js"></script>
+  </body>
+</html>

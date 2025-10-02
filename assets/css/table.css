@@ -1,0 +1,162 @@
+/* Members Table – light layer on top of main.css. */
+
+.sr-only {
+  position:absolute !important; width:1px !important; height:1px !important;
+  padding:0 !important; margin:-1px !important; overflow:hidden !important;
+  clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important;
+}
+.skip-link { position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+.skip-link:focus {
+  left:1rem; top:1rem; width:auto; height:auto; padding:.5rem .75rem;
+  background:#fff; border:1px solid #ddd; border-radius:.5rem; z-index:1000;
+}
+
+/* Toolbar */
+.table-toolbar{
+  display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap;
+}
+.table-toolbar .left{ display:flex; gap:10px; flex-wrap:wrap; }
+.table-toolbar .left:empty{ display:none; } /* HIDE empty left container */
+.table-toolbar .right input{
+  height:40px; border:1px solid var(--light-gray-border); border-radius:8px; padding:0 12px; min-width:260px;
+  background:var(--card-bg); color:var(--text-color);
+}
+.table-toolbar .right input:focus{
+  outline:none; border-color:var(--metallic-gold); box-shadow:0 0 0 3px rgba(199,154,69,.2);
+}
+.toolbar-right-inline { display:flex; align-items:center; gap:.5rem; }
+
+/* Density (keep defaults) */
+.density-compact .mc-table td,
+.density-compact .mc-table th { padding:.35rem .5rem; }
+.density-comfortable .mc-table td,
+.density-comfortable .mc-table th { padding:.7rem .9rem; }
+
+/* Table */
+.table-wrap{ overflow:auto; border:1px solid var(--light-gray-border); border-radius:10px; }
+.mc-table{ width:100%; border-collapse:separate; border-spacing:0; background:var(--card-bg); }
+.mc-table thead th{
+  position:sticky; top:0; z-index:1;
+  background:linear-gradient(180deg,#f8fbff,#eef6ff);
+  color:#123; text-align:left; padding:12px 10px; font-weight:800; border-bottom:1px solid var(--light-gray-border);
+  white-space:nowrap; cursor:pointer;
+}
+.mc-table thead th[aria-sort="ascending"]::after{ content:" ▲"; font-weight:700; }
+.mc-table thead th[aria-sort="descending"]::after{ content:" ▼"; font-weight:700; }
+.mc-table tbody td{ padding:10px; border-bottom:1px solid #eee; vertical-align:middle; color:#222; }
+.mc-table tbody tr:hover{ background:#fafafa; }
+
+/* Actions column + icon-only buttons */
+.mc-table .actions-col{ width:120px; white-space:nowrap; } /* 2 buttons only (Edit, Delete) */
+.table-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+.icon-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:36px; height:36px; border:1px solid #d9e1ea; border-radius:10px; background:#fff;
+  color:#0f2437; line-height:1; cursor:pointer;
+  transition:background .15s ease, box-shadow .15s ease, transform .02s ease;
+}
+.icon-btn:hover{ background:#f4f7fb; }
+.icon-btn:active{ transform:scale(.98); }
+.icon-btn i{ font-size:14px; }
+.icon-btn.danger{ border-color:#f1c6c6; color:#d12d2d; background:#fff; }
+.icon-btn.danger:hover{ background:#fff2f2; }
+
+/* monospace for ID values */
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+/* Status dot */
+.status-badge{ display:inline-flex; align-items:center; gap:.45rem; font-weight:600; color:#233; letter-spacing:.2px; }
+.status-dot{ width:10px; height:10px; border-radius:50%; box-shadow:0 0 0 2px #fff; }
+.dot-green{ background:#19c37d; }   /* Active */
+.dot-amber{ background:#ffb020; }   /* Pending / Hold */
+.dot-red{   background:#f44336; }   /* Inactive */
+.status-text{ display:none; } /* shown on mobile */
+
+/* Empty state */
+.mc-empty { text-align:center; opacity:.7; padding:2rem 1rem; }
+
+/* footer */
+.table-footer{
+  display:flex; justify-content:space-between; align-items:center; gap:10px; padding-top:12px;
+}
+#pageLabel{ font-weight:700; color:#123; }
+.rows-per-page { display:flex; align-items:center; gap:.35rem; }
+.rows-per-page select{ min-width:72px; }
+
+/* responsive tweaks (tablet) */
+@media (max-width: 900px){
+  .table-toolbar .right input{ min-width:180px; }
+  .mc-table .actions-col{ width:140px; } /* a bit wider on small screens */
+}
+
+/* ========================= */
+/* ======= MOBILE ========= */
+/* Card layout for ≤ 720px */
+/* ========================= */
+@media (max-width: 720px){
+  /* toolbar stacks */
+  .table-toolbar { gap:10px; }
+  .table-toolbar .right { width:100%; }
+  .table-toolbar .right input{ width:100%; min-width:0; }
+
+  .table-wrap{ overflow:visible; border:none; }
+  .mc-table { border-spacing:0; }
+  .mc-table thead { display:none; }
+
+  .mc-table tbody, .mc-table tr, .mc-table td { display:block; width:100%; }
+  .mc-table tbody tr{
+    background:#fff;
+    border:1px solid var(--light-gray-border);
+    border-radius:12px;
+    margin:10px 0;
+    box-shadow:0 4px 10px rgba(0,0,0,.04);
+    overflow:hidden;
+  }
+
+  /* each cell becomes a label:value row */
+  .mc-table tbody td{
+    display:grid;
+    grid-template-columns: 120px 1fr;
+    gap:10px;
+    padding:10px 12px;
+    border-bottom:1px solid #f0f0f0;
+  }
+  .mc-table tbody td:last-child{ border-bottom:none; }
+
+  /* label from data-label attr */
+  .mc-table tbody td::before{
+    content: attr(data-label);
+    font-weight:800;
+    color:#123;
+    letter-spacing:.2px;
+  }
+
+  /* actions cell: full width row, centered buttons */
+  .mc-table tbody td.actions-col {
+    grid-template-columns: 1fr;
+    padding: 10px 12px 12px;
+  }
+  .mc-table tbody td.actions-col::before { content: "Actions"; margin-bottom:6px; }
+  .table-actions{ justify-content: flex-start; }
+
+  /* status: show text label beside dot on mobile */
+  .status-text{ display:inline; }
+
+  /* footer stacks */
+  .table-footer{
+    flex-direction:column;
+    align-items:stretch;
+    gap:8px;
+  }
+  .pager{
+    display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
+  }
+  .pager .btn{ min-width:44px; height:40px; }
+  .rows-per-page{ width:100%; justify-content:flex-end; }
+}
+
+/* Slightly narrower phones */
+@media (max-width: 420px){
+  .mc-table tbody td{ grid-template-columns: 100px 1fr; }
+}

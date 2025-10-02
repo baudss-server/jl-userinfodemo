@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Modern Cipher - Dashboard</title>
+
+  <!-- Shared global styles -->
+  <link rel="stylesheet" href="assets/css/main.css"/>
+
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="assets/css/dashboard.css"/>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+</head>
+<body>
+
+  <div class="main-wrapper">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div>
+        <div class="logo-section">MODERN CIPHER</div>
+        <nav class="nav-links">
+          <a href="index.html" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+          <a href="member.html"><i class="fas fa-users"></i> Members</a>
+          <a href="members-table.html"><i class="fas fa-table"></i> Members Table</a>
+        </nav>
+      </div>
+      <div class="sidebar-footer">
+        <a href="index.html"><i class="fas fa-shield-alt"></i> Go to Verify</a>
+      </div>
+    </div>
+    <!-- /Sidebar -->
+
+    <!-- Content -->
+    <div class="dashboard-content">
+      <div class="dashboard-header">
+        <h1>Verification & Member Lookup</h1>
+      </div>
+
+      <div class="dashboard-container">
+        <!-- SEARCH / VERIFY -->
+        <section class="card verify-card" aria-labelledby="verify-title">
+          <div class="verify-head">
+            <h2 id="verify-title"><i class="fas fa-id-card"></i> Search & Verify</h2>
+          </div>
+
+          <div class="verify-controls">
+            <label for="mcSearch" class="sr-only">Search by Name or ID</label>
+            <div class="search-box">
+              <input id="mcSearch" type="text" inputmode="search" placeholder="Search name or ID..." autocomplete="off" />
+              <button id="mcClear" type="button" title="Clear"><i class="fas fa-times"></i></button>
+            </div>
+
+            <button id="mcVerifyBtn" class="btn-primary" type="button" title="Verify exact ID">
+              <i class="fas fa-shield-check"></i> Verify
+            </button>
+          </div>
+
+          <!-- Live matches while typing -->
+          <div class="verify-results" id="mcLiveInfo" aria-live="polite" aria-atomic="true"></div>
+
+          <p class="help-line">
+            Tip: Ang <b>Verify</b> ay naghahanap ng <b>exact ID match</b>. Habang nagta-type, lalabas ang mga match dito sa ibaba.
+          </p>
+        </section>
+
+        <!-- PROFILE PREVIEW (Member Form fields only) -->
+        <section class="card profile-card" aria-labelledby="profile-title">
+          <div class="profile-head">
+            <h2 id="profile-title"><i class="fas fa-user-check"></i> Member Profile Preview</h2>
+          </div>
+
+          <div id="mcProfileWrap" class="profile-wrap">
+            <!-- Placeholder -->
+            <div class="profile-empty" id="mcProfileEmpty">
+              <i class="fas fa-address-card"></i>
+              <p>Walang napiling profile. I-type ang <b>ID</b> at pindutin ang <b>Verify</b> o pumili sa live search.</p>
+            </div>
+
+            <!-- Filled on match -->
+            <div class="profile-grid" id="mcProfile" hidden>
+              <div class="profile-bio">
+                <div class="bio-text">
+                  <h3 id="mcFullname">—</h3>
+                </div>
+              </div>
+
+              <!-- Quick details (exactly the Member Form fields) -->
+              <div class="profile-details">
+                <div class="detail-col">
+                  <div class="drow"><span class="dlabel">ID Type</span><span class="dval" id="mcIdType">—</span></div>
+                  <div class="drow"><span class="dlabel">ID Number</span><span class="dval" id="mcIdValue">—</span></div>
+                  <div class="drow"><span class="dlabel">Name</span><span class="dval" id="mcName">—</span></div>
+                  <div class="drow"><span class="dlabel">Surname</span><span class="dval" id="mcSurname">—</span></div>
+                  <div class="drow"><span class="dlabel">Nationality</span><span class="dval" id="mcNationality">—</span></div>
+                </div>
+                <div class="detail-col">
+                  <div class="drow"><span class="dlabel">Age Group</span><span class="dval" id="mcAge">—</span></div>
+                  <div class="drow"><span class="dlabel">Represents</span><span class="dval" id="mcRepresents">—</span></div>
+                  <div class="drow"><span class="dlabel">Division</span><span class="dval" id="mcDivision">—</span></div>
+                  <div class="drow"><span class="dlabel">Status</span><span class="dval" id="mcStatus">—</span></div>
+                  <div class="drow"><span class="dlabel">Expires</span><span class="dval" id="mcExpires">—</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+    <!-- /Content -->
+  </div>
+
+  <footer class="main-footer">
+    <p>&copy; 2025 Modern Cipher. All Rights Reserved. | <span class="footer-highlight">Verification</span></p>
+  </footer>
+
+  <script src="assets/js/dashboard.js"></script>
+</body>
+</html>
