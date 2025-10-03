@@ -1,6 +1,10 @@
 // ===== Helpers =====
 const $ = (id) => document.getElementById(id);
 
+// Detect if the current page actually has the member form / preview UI
+const PAGE_HAS_MEMBER_UI =
+  !!$('id-type') || !!$('member-name') || !!$('qr-front') || !!$('idFlipCard');
+
 // localStorage keys
 const LS_KEY = 'mc_member_profile_v1';
 const TABLE_LIST_KEY = 'mc_members_table_v1';        // list used by table
@@ -14,42 +18,157 @@ function mcNormalizeIdType(s){
   const v = (s||'').toString().trim().toUpperCase();
   return v === 'CIN' ? 'CIN' : 'MIN';
 }
+function mcNormalizeDate(s){
+  const v = (s||'').trim();
+  if(!v) return '';
+  const m1 = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m1) return v;
+  const m2 = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m2){
+    const [_, mm, dd, yyyy] = m2;
+    const pad = (n)=> String(n).padStart(2,'0');
+    return `${yyyy}-${pad(mm)}-${pad(dd)}`;
+  }
+  return v;
+}
+
 function mcProfileToRow(p){
   const idType = mcNormalizeIdType(p.idType || 'MIN');
   const idValue = idType==='CIN' ? (p.cin||p.idValue||'') : (p.min||p.idValue||'');
   return {
     id: mcMakeId(`${idType}-${idValue || p.name || ''}`),
-    name: p.name||'',
-    surname: p.surname||'',
-    nationality: p.nationality||'',
+    name: (p.name||'').trim(),
+    surname: (p.surname||'').trim(),
+    nationality: (p.nationality||'').trim(),
     idType,
-    idValue,
-    age: p.age||'',
-    represents: p.represents||'',
-    division: p.division||'',
-    status: p.status||'',
-    expires: p.expires||''
+    idValue: (idValue||'').trim(),
+    age: (p.age||'').trim(),
+    represents: (p.represents||'').trim(),
+    division: (p.division||'').trim(),
+    status: (p.status||'').trim(),
+    expires: mcNormalizeDate(p.expires||'')
   };
 }
-// Merge to table list (de-dup by default). If opts.forceNew=true, always add as new row.
+
+// ---- De-dup helpers ----
+function personKey(r){
+  return `${(r.name||'').trim().toLowerCase()}|${(r.surname||'').trim().toLowerCase()}|${(r.idType||'').trim().toUpperCase()}`;
+}
+function strongKey(r){
+  return `${(r.idType||'').trim().toUpperCase()}|${(r.idValue||'').trim().toLowerCase()}`;
+}
+/** keep newest first */
+function dedupeList(list){
+  const seenStrong = new Set();
+  const seenWeak   = new Set();
+  const out = [];
+  for (const r of (Array.isArray(list)?list:[])){
+    const hasStrong = !!(r.idValue && String(r.idValue).trim());
+    const sKey = strongKey(r);
+    const wKey = personKey(r);
+
+    if (hasStrong){
+      if (seenStrong.has(sKey)) continue;
+      seenStrong.add(sKey);
+      seenWeak.add(wKey);
+      out.push(r);
+    }else{
+      if (seenWeak.has(wKey)) continue;
+      seenWeak.add(wKey);
+      out.push(r);
+    }
+  }
+  return out;
+}
+
+// Merge/Insert to table list with cleanups (atomic-ish)
 function mcSyncMemberToTable(profile, opts={}){
   try{
     const row = mcProfileToRow(profile);
-    if(!(row.idValue || row.name || row.surname)) return; // guard
+    if(!(row.idValue || (row.name && row.surname))) return; // guard
 
-    const raw = localStorage.getItem(TABLE_LIST_KEY);
-    const list = raw ? (JSON.parse(raw) || []) : [];
+    const raw  = localStorage.getItem(TABLE_LIST_KEY);
+    let list = raw ? (JSON.parse(raw) || []) : [];
 
-    if (opts.forceNew) {
+    // 0) Global cleanup first (idempotent)
+    list = dedupeList(list);
+
+    // 🆕 Update-only path for Save Profile (from Edit)
+    if (opts.mergeOnly) {
+      let idx = -1;
+
+      // 1) Prefer match by explicit row id (when provided by table.js)
+      if (opts.byId) idx = list.findIndex(it => it.id === opts.byId);
+
+      // 2) Fallback: match by strong key if we have idValue
+      if (idx < 0 && row.idValue) {
+        const sKey = strongKey(row);
+        idx = list.findIndex(it => strongKey(it) === sKey);
+      }
+
+      // 3) Fallback: match by name+surname (for legacy weak rows)
+      if (idx < 0 && !row.idValue) {
+        const nameOnly = `${(row.name||'').trim().toLowerCase()}|${(row.surname||'').trim().toLowerCase()}`;
+        idx = list.findIndex(it =>
+          `${(it.name||'').trim().toLowerCase()}|${(it.surname||'').trim().toLowerCase()}` === nameOnly
+        );
+      }
+
+      if (idx >= 0) {
+        const keepId = list[idx].id;
+        list[idx] = { ...list[idx], ...row, id: keepId };
+        list = dedupeList(list);
+        localStorage.setItem(TABLE_LIST_KEY, JSON.stringify(list));
+        localStorage.setItem(TABLE_REFRESH_FLAG, String(Date.now())); // ping other tab
+      }
+      return; // 🚫 never insert in mergeOnly mode
+    }
+
+    // 1) Purge same strong key + weak dups (pre-insert cleanup)
+    const hasStrong = !!row.idValue;
+    if (hasStrong){
+      const keyNew = strongKey(row);
+
+      // drop exact same strong
+      // plus drop ANY weak row with same name+surname (ignore idType) to remove old drafts
+      const nameOnlyNew = `${(row.name||'').trim().toLowerCase()}|${(row.surname||'').trim().toLowerCase()}`;
+      list = list.filter(it => {
+        if (strongKey(it) === keyNew) return false;
+        const weak = !it.idValue || String(it.idValue).trim()==='';
+        if (weak) {
+          const nameOnlyOld = `${(it.name||'').trim().toLowerCase()}|${(it.surname||'').trim().toLowerCase()}`;
+          if (nameOnlyOld === nameOnlyNew) return false;
+        }
+        return true;
+      });
+    } else {
+      const wNew = personKey(row);
+      let keptWeak = false;
+      list = list.filter(it=>{
+        if (personKey(it)!==wNew) return true;
+        if (it.idValue) return true;
+        if (!keptWeak){ keptWeak = true; return true; }
+        return false;
+      });
+    }
+
+    // 2) Insert newest on top OR merge (for non-mergeOnly flows)
+    if (opts.forceNew){
       list.unshift(row);
     } else {
-      const idx = list.findIndex(r =>
-        (row.idValue && r.idValue===row.idValue && r.idType===row.idType) ||
-        (!row.idValue && r.name===row.name && r.surname===row.surname)
-      );
-      if(idx>=0){ list[idx] = {...list[idx], ...row}; }
-      else{ list.unshift(row); }
+      if (hasStrong){
+        const idx = list.findIndex(it => strongKey(it) === strongKey(row));
+        if (idx>=0) list[idx] = { ...list[idx], ...row };
+        else list.unshift(row);
+      } else {
+        const idx = list.findIndex(it => personKey(it) === personKey(row) && !it.idValue);
+        if (idx>=0) list[idx] = { ...list[idx], ...row };
+        else list.unshift(row);
+      }
     }
+
+    // 3) Final pass para sure na walang dup
+    list = dedupeList(list);
 
     localStorage.setItem(TABLE_LIST_KEY, JSON.stringify(list));
     localStorage.setItem(TABLE_REFRESH_FLAG, String(Date.now())); // ping other tab
@@ -99,7 +218,6 @@ function writeForm(data = {}) {
   set('cin',         data.cin);
   set('id-type',     data.idType || 'MIN');
 
-  // reflect into the single input
   const type = (data.idType || 'MIN').toUpperCase() === 'CIN' ? 'CIN' : 'MIN';
   set('id-type-value', type === 'CIN' ? data.cin : data.min);
   const lbl = $('id-type-value-label');
@@ -111,26 +229,30 @@ function writeForm(data = {}) {
   set('represents',       data.represents);
   set('license-division', data.division);
   set('license-status',   data.status);
-  set('expires-on',       data.expires);
+  set('expires-on',       mcNormalizeDate(data.expires));
 }
 
 /* ---------- Mirror to ID Preview ---------- */
 function updateIDCard(){
+  if (!PAGE_HAS_MEMBER_UI) return; // hard guard if this file is loaded on other pages
+
   const data = readForm();
 
-  // push the visible single input into the correct hidden field
-  if (data.idType === 'CIN') $('cin').value = data.idTypedVal;
-  else $('member-id').value = data.idTypedVal;
+  // Reflect the single visible input into the hidden MIN/CIN fields (guarded)
+  const cinEl = $('cin');
+  const minEl = $('member-id');
+  if (data.idType === 'CIN') { if (cinEl) cinEl.value = data.idTypedVal; }
+  else { if (minEl) minEl.value = data.idTypedVal; }
 
   const primaryIdType = (data.idType === 'CIN') ? 'CIN' : 'MIN';
-  const minVal = $('member-id').value.trim();
-  const cinVal = $('cin').value.trim();
+  const minVal = (minEl?.value || '').trim();
+  const cinVal = (cinEl?.value || '').trim();
   const primaryIdVal  = (primaryIdType === 'CIN') ? cinVal : minVal;
 
   const setText = (id, v) => {
     const el = $(id);
     if (!el) return;
-    const val = v || '—';
+    const val = (v==null || String(v).trim()==='') ? '—' : v;
     el.textContent = val;
     el.title = val;
   };
@@ -147,18 +269,18 @@ function updateIDCard(){
   if (lblRow) lblRow.textContent = `Member Id number (${primaryIdType})`;
 
   // Status pill
-  setText('id-class-pill', data.status ? data.status.toUpperCase() : '—');
+  setText('id-class-pill', (data.status||'').toUpperCase());
 
   // BACK rows
   setText('b-idtype',   primaryIdType);
   setText('b-division', data.division);
   setText('b-status',   data.status);
-  setText('b-expires',  data.expires);
+  setText('b-expires',  mcNormalizeDate(data.expires));
 
   // footer ID value
   setText('b-idval',    primaryIdVal || '—');
 
-  // Failsafe auto-fit for front rows (screen only)
+  // Failsafe auto-fit (screen only)
   ['fs-name','fs-surname','fs-nationality','fs-min','fs-age','fs-represents']
     .forEach(id => autoFitRow($(id)));
 
@@ -168,26 +290,38 @@ function updateIDCard(){
   drawPlaceholderQR($('qr-back'),  qrPayload);
 }
 
-/* ---------- Persistence (also syncs table) ---------- */
+/* ---------- Persistence (Save = draft or update-only) ---------- */
 function saveToStorage() {
+  if (!PAGE_HAS_MEMBER_UI) return;
+
+  const gv = (id) => ($(id)?.value || '');
   const payload = {
-    name: $('member-name').value,
-    surname: $('surname').value,
-    nationality: $('nationality').value,
-    min: $('member-id').value,
-    cin: $('cin').value,
-    idType: $('id-type').value,
-    age: $('age-group').value,
-    represents: $('represents').value,
-    division: $('license-division').value,
-    status: $('license-status').value,
-    expires: $('expires-on').value,
+    name: gv('member-name'),
+    surname: gv('surname'),
+    nationality: gv('nationality'),
+    min: gv('member-id'),
+    cin: gv('cin'),
+    idType: gv('id-type'),
+    age: gv('age-group'),
+    represents: gv('represents'),
+    division: gv('license-division'),
+    status: gv('license-status'),
+    expires: mcNormalizeDate(gv('expires-on')),
   };
   localStorage.setItem(LS_KEY, JSON.stringify(payload));
-  mcSyncMemberToTable(payload); // de-dup merge by default
+
+  // 🆕 If we are in edit mode (from table), update existing row only
+  const editId = localStorage.getItem('mc_member_edit_row_id');
+  if (editId) {
+    mcSyncMemberToTable(payload, { mergeOnly: true, byId: editId });
+    localStorage.removeItem('mc_member_edit_row_id'); // cleanup edit mode after save
+  } else {
+    // Not in edit mode → Save acts as draft only (no table write)
+  }
 }
 
 function loadFromStorage() {
+  if (!PAGE_HAS_MEMBER_UI) return;
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return;
@@ -195,10 +329,18 @@ function loadFromStorage() {
   } catch { /* ignore */ }
 }
 
-/* ---------- ADD MEMBER (always new row) ---------- */
+/* ---------- ADD MEMBER (with click lock/debounce) ---------- */
+let __ADD_LOCK = false;
 function mcAddMemberFromForm(){
-  // make sure hidden MIN/CIN reflect the visible input before capturing
-  const typeSel = $('id-type')?.value || 'MIN';
+  if (!PAGE_HAS_MEMBER_UI) return;
+  if (__ADD_LOCK) return;
+  __ADD_LOCK = true;
+
+  const addBtn = $('btnAddMember');
+  if (addBtn) addBtn.disabled = true;
+
+  // reflect visible input to hidden MIN/CIN
+  const typeSel  = $('id-type')?.value || 'MIN';
   const typedVal = ($('id-type-value')?.value || '').trim();
   if ($('cin') && $('member-id')) {
     if (typeSel === 'CIN') $('cin').value = typedVal; else $('member-id').value = typedVal;
@@ -215,22 +357,28 @@ function mcAddMemberFromForm(){
     represents: $('represents')?.value || '',
     division: $('license-division')?.value || '',
     status: $('license-status')?.value || '',
-    expires: $('expires-on')?.value || '',
+    expires: mcNormalizeDate($('expires-on')?.value || ''),
   };
 
   // keep last draft
   localStorage.setItem(LS_KEY, JSON.stringify(payload));
 
-  // force new row in table
+  // insert newest; mcSyncMemberToTable will purge same strong and weak drafts before insert
   mcSyncMemberToTable(payload, { forceNew: true });
 
-  // feedback
-  const btn = $('btnAddMember');
-  if (btn) {
-    const original = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-check"></i> Added!';
-    btn.classList.add('btn-success');
-    setTimeout(()=>{ btn.innerHTML = original; btn.classList.remove('btn-success'); }, 1500);
+  // feedback + unlock
+  if (addBtn) {
+    const original = addBtn.innerHTML;
+    addBtn.innerHTML = '<i class="fa-solid fa-check"></i> Added!';
+    addBtn.classList.add('btn-success');
+    setTimeout(()=>{
+      addBtn.innerHTML = original;
+      addBtn.classList.remove('btn-success');
+      addBtn.disabled = false;
+      __ADD_LOCK = false;
+    }, 700);
+  } else {
+    setTimeout(()=>{ __ADD_LOCK = false; }, 700);
   }
 }
 
@@ -275,8 +423,9 @@ function drawPlaceholderQR(canvas, seedText){
   }
 
   let hash = 2166136261;
-  for(let i=0;i<seedText.length;i++){
-    hash ^= seedText.charCodeAt(i);
+  const seed = String(seedText || '');
+  for(let i=0;i<seed.length;i++){
+    hash ^= seed.charCodeAt(i);
     hash = (hash*16777619)>>>0;
   }
 
@@ -308,15 +457,17 @@ function wireSaveButton(){
     saveToStorage();
     updateIDCard();
     const original = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-check"></i> SAVED!';
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> SAVED!';
     btn.classList.add('btn-success');
-    setTimeout(()=>{ btn.innerHTML = original; btn.classList.remove('btn-success'); }, 1800);
+    setTimeout(()=>{ btn.innerHTML = original; btn.classList.remove('btn-success'); }, 1000);
   });
 }
 function wireAddButton(){
   const addBtn = $('btnAddMember');
   if(!addBtn) return;
-  addBtn.addEventListener('click', mcAddMemberFromForm);
+  if (addBtn.dataset.bound === '1') return; // ensure single listener
+  addBtn.dataset.bound = '1';
+  addBtn.addEventListener('click', mcAddMemberFromForm, { passive:true });
 }
 
 function wireSearchFocus(){
@@ -377,14 +528,13 @@ function wirePrint(){
 function wireIdControls(){
   const typeSel = $('id-type');
   const input   = $('id-type-value');
-  // IMPORTANT: guard para di mag-error sa pages na walang form (e.g., members-table)
   if(!typeSel || !input) return;
 
   const reflect = ()=>{
     input.placeholder = 'Type MIN or CIN here';
     input.value = (typeSel.value === 'CIN') ? ($('cin')?.value || '') : ($('member-id')?.value || '');
     updateIDCard();
-    saveToStorage(); // also syncs the table
+    saveToStorage(); // draft or update-only
   };
   typeSel.addEventListener('change', reflect);
   input.addEventListener('input', ()=>{
@@ -392,12 +542,14 @@ function wireIdControls(){
     else if ($('member-id')) $('member-id').value = input.value;
     updateIDCard();
   });
-  input.addEventListener('change', ()=> saveToStorage()); // sync on commit
+  input.addEventListener('change', ()=> saveToStorage());
   reflect();
 }
 
 /* ---------- Init ---------- */
 document.addEventListener('DOMContentLoaded', ()=>{
+  if (!PAGE_HAS_MEMBER_UI) return; // <- IMPORTANT: do nothing on pages without the form/preview
+
   loadFromStorage();
   wireIdControls();
   updateIDCard();
@@ -407,7 +559,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
       const el = $(id);
       if(el){
         el.addEventListener('input', updateIDCard);
-        el.addEventListener('change', ()=>{ updateIDCard(); saveToStorage(); }); // sync on change
+        el.addEventListener('change', ()=>{ updateIDCard(); saveToStorage(); });
       }
     });
 

@@ -26,7 +26,7 @@
 }
 .toolbar-right-inline { display:flex; align-items:center; gap:.5rem; }
 
-/* Density (keep defaults) */
+/* Density */
 .density-compact .mc-table td,
 .density-compact .mc-table th { padding:.35rem .5rem; }
 .density-comfortable .mc-table td,
@@ -47,7 +47,7 @@
 .mc-table tbody tr:hover{ background:#fafafa; }
 
 /* Actions column + icon-only buttons */
-.mc-table .actions-col{ width:120px; white-space:nowrap; } /* 2 buttons only (Edit, Delete) */
+.mc-table .actions-col{ width:120px; white-space:nowrap; }
 .table-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 
 .icon-btn{
@@ -87,12 +87,12 @@
 /* responsive tweaks (tablet) */
 @media (max-width: 900px){
   .table-toolbar .right input{ min-width:180px; }
-  .mc-table .actions-col{ width:140px; } /* a bit wider on small screens */
+  .mc-table .actions-col{ width:140px; }
 }
 
 /* ========================= */
 /* ======= MOBILE ========= */
-/* Card layout for ≤ 720px */
+/* Card layout for ≤ 720px  */
 /* ========================= */
 @media (max-width: 720px){
   /* toolbar stacks */
@@ -100,6 +100,7 @@
   .table-toolbar .right { width:100%; }
   .table-toolbar .right input{ width:100%; min-width:0; }
 
+  /* remove extra borders; convert to cards */
   .table-wrap{ overflow:visible; border:none; }
   .mc-table { border-spacing:0; }
   .mc-table thead { display:none; }
@@ -117,9 +118,9 @@
   /* each cell becomes a label:value row */
   .mc-table tbody td{
     display:grid;
-    grid-template-columns: 120px 1fr;
+    grid-template-columns: 120px 1fr;  /* label | value */
     gap:10px;
-    padding:10px 12px;
+    padding:12px 14px;
     border-bottom:1px solid #f0f0f0;
   }
   .mc-table tbody td:last-child{ border-bottom:none; }
@@ -132,16 +133,17 @@
     letter-spacing:.2px;
   }
 
-  /* actions cell: full width row, centered buttons */
+  /* status: show text label on mobile too */
+  .status-text{ display:inline; }
+
+  /* actions cell: stack nicely */
   .mc-table tbody td.actions-col {
     grid-template-columns: 1fr;
-    padding: 10px 12px 12px;
+    padding: 12px 14px 14px;
   }
   .mc-table tbody td.actions-col::before { content: "Actions"; margin-bottom:6px; }
-  .table-actions{ justify-content: flex-start; }
-
-  /* status: show text label beside dot on mobile */
-  .status-text{ display:inline; }
+  .table-actions{ justify-content:flex-start; gap:10px; }
+  .icon-btn{ width:40px; height:40px; border-radius:12px; }
 
   /* footer stacks */
   .table-footer{
